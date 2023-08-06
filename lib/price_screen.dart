@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'network.dart';
 import 'coin_data.dart';
 
 class PriceScreen extends StatefulWidget {
@@ -8,7 +9,33 @@ class PriceScreen extends StatefulWidget {
 }
 
 class _PriceScreenState extends State<PriceScreen> {
+  var bitcoinData;
+  void getBitcoinData() async {
+    NetworkHelper netHelp = NetworkHelper();
+    bitcoinData = await netHelp.getBitcoinData();
+  }
+
   String selectedCurrency = 'USD';
+  double bitcoinPrice = 0.0;
+
+  void updateUi(var bitcoinData, String symbol) {
+    setState(() {
+      if (bitcoinData == null || symbol == '-') {
+        bitcoinPrice = 0.0;
+        selectedCurrency = 'Select a currency';
+      } else {
+        bitcoinPrice = bitcoinData[symbol]['last'];
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getBitcoinData();
+    updateUi(bitcoinData, selectedCurrency);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +57,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? USD',
+                  '1 BTC = $bitcoinPrice $selectedCurrency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
@@ -50,7 +77,7 @@ class _PriceScreenState extends State<PriceScreen> {
               onSelectedItemChanged: (selectedIndex) {
                 setState(() {
                   selectedCurrency = currenciesList[selectedIndex];
-                  print(selectedCurrency);
+                  updateUi(bitcoinData, selectedCurrency);
                 });
               },
               children: [for (var item in currenciesList) Text(item)],
